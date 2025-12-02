@@ -1,0 +1,24 @@
+# Cinema View Server Configuration
+# Copy this file to config.yaml and adjust as needed
+
+server:
+  host: "0.0.0.0"
+  port: 6540
+  read_timeout: 30s
+  write_timeout: 0s  # 0 = no timeout (important for streaming)
+
+library:
+  path: "/media/movies"  # Path to your media library
+  name: "Media Library"  # Display name for the library
+
+database:
+  path: "data/library.db"
+
+thumbnails:
+  output_dir: "data/thumbnails"
+  cache_capacity: 1000       # Max items in memory cache
+  cache_max_size: 536870912  # Max cache size in bytes (512 MB)
+
+logging:
+  level: "info"   # debug, info, warn, error
+  pretty: true    # Set to true for human-readable logs

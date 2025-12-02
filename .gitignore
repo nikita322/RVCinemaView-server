@@ -1,16 +1,19 @@
-# Binaries
-rvpodview
-*.exe
+.claude/
+
+# Data directories
+server/data/
+data/
 
 # Environment files
 .env
+*.local
 
 # IDE
-/.claude/
-/.idea/
+.idea/
 .vscode/
 *.swp
 *.swo
+*.iml
 
 # OS
 .DS_Store
@@ -18,3 +21,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Go
+go.work

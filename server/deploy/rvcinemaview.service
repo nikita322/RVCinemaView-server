@@ -1,0 +1,32 @@
+[Unit]
+Description=RVCinemaView - Lightweight Media Server for RISC-V
+Documentation=https://github.com/user/rvcinemaview
+After=network.target
+
+[Service]
+Type=simple
+User=rvcinemaview
+Group=rvcinemaview
+WorkingDirectory=/opt/rvcinemaview
+ExecStart=/opt/rvcinemaview/rvcinemaview-riscv64 -config /opt/rvcinemaview/config.yaml
+Restart=on-failure
+RestartSec=5
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=rvcinemaview
+
+# Security hardening
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=yes
+ReadWritePaths=/opt/rvcinemaview/data
+
+# Resource limits
+LimitNOFILE=65536
+MemoryMax=512M
+
+[Install]
+WantedBy=multi-user.target

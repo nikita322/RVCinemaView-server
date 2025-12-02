@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- TV specific: touchscreen not required -->
+    <uses-feature
+        android:name="android.hardware.touchscreen"
+        android:required="false" />
+    <uses-feature
+        android:name="android.software.leanback"
+        android:required="false" />
+
+    <application
+        android:banner="@drawable/tv_banner"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.RVCinemaView"
+        android:usesCleartextTraffic="true">
+
+        <!-- Main launcher activity -->
+        <activity
+            android:name=".ui.connect.ConnectActivity"
+            android:exported="true"
+            android:theme="@style/Theme.RVCinemaView">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Unified Browse (works on all devices) -->
+        <activity
+            android:name=".ui.browse.UnifiedBrowseActivity"
+            android:theme="@style/Theme.RVCinemaView"
+            android:configChanges="orientation|screenSize|screenLayout|keyboard|keyboardHidden|navigation" />
+
+        <!-- Mobile Player -->
+        <activity
+            android:name=".ui.player.PlayerActivity"
+            android:theme="@style/Theme.RVCinemaView.Player"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+            android:supportsPictureInPicture="true" />
+
+        <!-- TV Player (uses Leanback controls) -->
+        <activity
+            android:name=".ui.tv.TvPlayerActivity"
+            android:theme="@style/Theme.RVCinemaView.Leanback"
+            android:screenOrientation="landscape"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden" />
+
+        <!-- Settings -->
+        <activity
+            android:name=".ui.settings.SettingsActivity"
+            android:theme="@style/Theme.RVCinemaView"
+            android:parentActivityName=".ui.browse.UnifiedBrowseActivity" />
+
+    </application>
+
+</manifest>

@@ -137,6 +137,7 @@ func (s *ThumbnailService) ProcessMediaItem(ctx context.Context, media *storage.
 				meta.Height,
 				meta.VideoCodec,
 				meta.AudioCodec,
+				meta.AudioChannels,
 			); err != nil {
 				s.logger.Error().Err(err).Str("id", media.ID).Msg("failed to update metadata")
 			} else {

@@ -59,6 +59,7 @@ func (s *SQLiteStorage) migrate() error {
 		height INTEGER,
 		video_codec TEXT,
 		audio_codec TEXT,
+		audio_channels INTEGER,
 		has_subtitles BOOLEAN DEFAULT FALSE,
 		thumbnail_generated BOOLEAN DEFAULT FALSE,
 		file_modified_at DATETIME,
@@ -82,7 +83,14 @@ func (s *SQLiteStorage) migrate() error {
 	`
 
 	_, err := s.db.Exec(schema)
-	return err
+	if err != nil {
+		return err
+	}
+
+	// Migration: add audio_channels column if it doesn't exist
+	_, _ = s.db.Exec("ALTER TABLE media_items ADD COLUMN audio_channels INTEGER")
+
+	return nil
 }
 
 func (s *SQLiteStorage) Close() error {
@@ -153,7 +161,7 @@ func (s *SQLiteStorage) UpdateFolderItemCount(id string, count int) error {
 func (s *SQLiteStorage) GetMediaItem(id string) (*MediaItem, error) {
 	row := s.db.QueryRow(`
 		SELECT id, folder_id, title, path, size, duration, width, height,
-		       video_codec, audio_codec, has_subtitles, file_modified_at, created_at
+		       video_codec, audio_codec, audio_channels, has_subtitles, file_modified_at, created_at
 		FROM media_items WHERE id = ?
 	`, id)
 
@@ -162,7 +170,7 @@ func (s *SQLiteStorage) GetMediaItem(id string) (*MediaItem, error) {
 	err := row.Scan(
 		&m.ID, &m.FolderID, &m.Title, &m.Path, &m.Size,
 		&m.Duration, &m.Width, &m.Height,
-		&m.VideoCodec, &m.AudioCodec, &m.HasSubtitles,
+		&m.VideoCodec, &m.AudioCodec, &m.AudioChannels, &m.HasSubtitles,
 		&modifiedAt, &m.CreatedAt,
 	)
 	if err == sql.ErrNoRows {
@@ -182,7 +190,7 @@ func (s *SQLiteStorage) GetMediaItem(id string) (*MediaItem, error) {
 func (s *SQLiteStorage) GetMediaItemByPath(path string) (*MediaItem, error) {
 	row := s.db.QueryRow(`
 		SELECT id, folder_id, title, path, size, duration, width, height,
-		       video_codec, audio_codec, has_subtitles, file_modified_at, created_at
+		       video_codec, audio_codec, audio_channels, has_subtitles, file_modified_at, created_at
 		FROM media_items WHERE path = ?
 	`, path)
 
@@ -191,7 +199,7 @@ func (s *SQLiteStorage) GetMediaItemByPath(path string) (*MediaItem, error) {
 	err := row.Scan(
 		&m.ID, &m.FolderID, &m.Title, &m.Path, &m.Size,
 		&m.Duration, &m.Width, &m.Height,
-		&m.VideoCodec, &m.AudioCodec, &m.HasSubtitles,
+		&m.VideoCodec, &m.AudioCodec, &m.AudioChannels, &m.HasSubtitles,
 		&modifiedAt, &m.CreatedAt,
 	)
 	if err == sql.ErrNoRows {
@@ -212,7 +220,7 @@ func (s *SQLiteStorage) GetMediaItemByPath(path string) (*MediaItem, error) {
 func (s *SQLiteStorage) GetRootMedia() ([]MediaItem, error) {
 	rows, err := s.db.Query(`
 		SELECT id, folder_id, title, path, size, duration, width, height,
-		       video_codec, audio_codec, has_subtitles, file_modified_at, created_at
+		       video_codec, audio_codec, audio_channels, has_subtitles, file_modified_at, created_at
 		FROM media_items WHERE folder_id = '' ORDER BY title
 	`)
 	if err != nil {
@@ -227,7 +235,7 @@ func (s *SQLiteStorage) GetRootMedia() ([]MediaItem, error) {
 		if err := rows.Scan(
 			&m.ID, &m.FolderID, &m.Title, &m.Path, &m.Size,
 			&m.Duration, &m.Width, &m.Height,
-			&m.VideoCodec, &m.AudioCodec, &m.HasSubtitles,
+			&m.VideoCodec, &m.AudioCodec, &m.AudioChannels, &m.HasSubtitles,
 			&modifiedAt, &m.CreatedAt,
 		); err != nil {
 			return nil, err
@@ -244,7 +252,7 @@ func (s *SQLiteStorage) GetRootMedia() ([]MediaItem, error) {
 func (s *SQLiteStorage) GetMediaItemsByFolder(folderID string) ([]MediaItem, error) {
 	rows, err := s.db.Query(`
 		SELECT id, folder_id, title, path, size, duration, width, height,
-		       video_codec, audio_codec, has_subtitles, file_modified_at, created_at
+		       video_codec, audio_codec, audio_channels, has_subtitles, file_modified_at, created_at
 		FROM media_items WHERE folder_id = ? ORDER BY title
 	`, folderID)
 	if err != nil {
@@ -259,7 +267,7 @@ func (s *SQLiteStorage) GetMediaItemsByFolder(folderID string) ([]MediaItem, err
 		if err := rows.Scan(
 			&m.ID, &m.FolderID, &m.Title, &m.Path, &m.Size,
 			&m.Duration, &m.Width, &m.Height,
-			&m.VideoCodec, &m.AudioCodec, &m.HasSubtitles,
+			&m.VideoCodec, &m.AudioCodec, &m.AudioChannels, &m.HasSubtitles,
 			&modifiedAt, &m.CreatedAt,
 		); err != nil {
 			return nil, err
@@ -277,8 +285,8 @@ func (s *SQLiteStorage) CreateMediaItem(m *MediaItem) error {
 	_, err := s.db.Exec(`
 		INSERT INTO media_items (
 			id, folder_id, title, path, size, duration, width, height,
-			video_codec, audio_codec, has_subtitles, file_modified_at, created_at, updated_at
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			video_codec, audio_codec, audio_channels, has_subtitles, file_modified_at, created_at, updated_at
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		ON CONFLICT(path) DO UPDATE SET
 			title = excluded.title,
 			size = excluded.size,
@@ -287,7 +295,7 @@ func (s *SQLiteStorage) CreateMediaItem(m *MediaItem) error {
 	`,
 		m.ID, m.FolderID, m.Title, m.Path, m.Size,
 		m.Duration, m.Width, m.Height,
-		m.VideoCodec, m.AudioCodec, m.HasSubtitles,
+		m.VideoCodec, m.AudioCodec, m.AudioChannels, m.HasSubtitles,
 		m.ModifiedAt, m.CreatedAt, time.Now(),
 	)
 
@@ -295,7 +303,7 @@ func (s *SQLiteStorage) CreateMediaItem(m *MediaItem) error {
 }
 
 // UpdateMediaMetadata updates metadata fields for a media item
-func (s *SQLiteStorage) UpdateMediaMetadata(id string, duration int64, width, height int, videoCodec, audioCodec string) error {
+func (s *SQLiteStorage) UpdateMediaMetadata(id string, duration int64, width, height int, videoCodec, audioCodec string, audioChannels int) error {
 	_, err := s.db.Exec(`
 		UPDATE media_items SET
 			duration = ?,
@@ -303,9 +311,10 @@ func (s *SQLiteStorage) UpdateMediaMetadata(id string, duration int64, width, he
 			height = ?,
 			video_codec = ?,
 			audio_codec = ?,
+			audio_channels = ?,
 			updated_at = ?
 		WHERE id = ?
-	`, duration, width, height, videoCodec, audioCodec, time.Now(), id)
+	`, duration, width, height, videoCodec, audioCodec, audioChannels, time.Now(), id)
 	return err
 }
 
@@ -313,7 +322,7 @@ func (s *SQLiteStorage) UpdateMediaMetadata(id string, duration int64, width, he
 func (s *SQLiteStorage) GetMediaItemsWithoutMetadata(limit int) ([]MediaItem, error) {
 	rows, err := s.db.Query(`
 		SELECT id, folder_id, title, path, size, duration, width, height,
-		       video_codec, audio_codec, has_subtitles, file_modified_at, created_at
+		       video_codec, audio_codec, audio_channels, has_subtitles, file_modified_at, created_at
 		FROM media_items WHERE duration IS NULL LIMIT ?
 	`, limit)
 	if err != nil {
@@ -328,7 +337,7 @@ func (s *SQLiteStorage) GetMediaItemsWithoutMetadata(limit int) ([]MediaItem, er
 		if err := rows.Scan(
 			&m.ID, &m.FolderID, &m.Title, &m.Path, &m.Size,
 			&m.Duration, &m.Width, &m.Height,
-			&m.VideoCodec, &m.AudioCodec, &m.HasSubtitles,
+			&m.VideoCodec, &m.AudioCodec, &m.AudioChannels, &m.HasSubtitles,
 			&modifiedAt, &m.CreatedAt,
 		); err != nil {
 			return nil, err
@@ -383,7 +392,7 @@ func (s *SQLiteStorage) GetContinueWatching(limit int) ([]ContinueWatchingItem, 
 	rows, err := s.db.Query(`
 		SELECT
 			m.id, m.folder_id, m.title, m.path, m.size, m.duration, m.width, m.height,
-			m.video_codec, m.audio_codec, m.has_subtitles, m.file_modified_at, m.created_at,
+			m.video_codec, m.audio_codec, m.audio_channels, m.has_subtitles, m.file_modified_at, m.created_at,
 			p.media_id, p.position, p.duration, p.progress, p.updated_at
 		FROM playback_states p
 		JOIN media_items m ON p.media_id = m.id
@@ -403,7 +412,7 @@ func (s *SQLiteStorage) GetContinueWatching(limit int) ([]ContinueWatchingItem, 
 		if err := rows.Scan(
 			&item.Media.ID, &item.Media.FolderID, &item.Media.Title, &item.Media.Path,
 			&item.Media.Size, &item.Media.Duration, &item.Media.Width, &item.Media.Height,
-			&item.Media.VideoCodec, &item.Media.AudioCodec, &item.Media.HasSubtitles,
+			&item.Media.VideoCodec, &item.Media.AudioCodec, &item.Media.AudioChannels, &item.Media.HasSubtitles,
 			&modifiedAt, &item.Media.CreatedAt,
 			&item.PlaybackState.MediaID, &item.PlaybackState.Position,
 			&item.PlaybackState.Duration, &item.PlaybackState.Progress,

@@ -12,19 +12,20 @@ type Folder struct {
 }
 
 type MediaItem struct {
-	ID           string    `json:"id"`
-	FolderID     string    `json:"-"` // Internal use only
-	Title        string    `json:"title"`
-	Path         string    `json:"-"`
-	Size         int64     `json:"size"`
-	Duration     *int64    `json:"duration,omitempty"`
-	Width        *int      `json:"width,omitempty"`
-	Height       *int      `json:"height,omitempty"`
-	VideoCodec   *string   `json:"video_codec,omitempty"`
-	AudioCodec   *string   `json:"audio_codec,omitempty"`
-	HasSubtitles bool      `json:"-"` // Internal use only
-	ModifiedAt   time.Time `json:"-"`
-	CreatedAt    time.Time `json:"-"`
+	ID            string    `json:"id"`
+	FolderID      string    `json:"-"` // Internal use only
+	Title         string    `json:"title"`
+	Path          string    `json:"-"`
+	Size          int64     `json:"size"`
+	Duration      *int64    `json:"duration,omitempty"`
+	Width         *int      `json:"width,omitempty"`
+	Height        *int      `json:"height,omitempty"`
+	VideoCodec    *string   `json:"video_codec,omitempty"`
+	AudioCodec    *string   `json:"audio_codec,omitempty"`
+	AudioChannels *int      `json:"audio_channels,omitempty"` // 2 = stereo, 6 = 5.1, 8 = 7.1
+	HasSubtitles  bool      `json:"-"`                        // Internal use only
+	ModifiedAt    time.Time `json:"-"`
+	CreatedAt     time.Time `json:"-"`
 }
 
 type PlaybackState struct {

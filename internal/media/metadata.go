@@ -10,12 +10,13 @@ import (
 )
 
 type Metadata struct {
-	Duration   int64  // seconds
-	Width      int
-	Height     int
-	VideoCodec string
-	AudioCodec string
-	Bitrate    int64
+	Duration      int64  // seconds
+	Width         int
+	Height        int
+	VideoCodec    string
+	AudioCodec    string
+	AudioChannels int // number of audio channels (2 = stereo, 6 = 5.1, etc.)
+	Bitrate       int64
 }
 
 type MetadataExtractor struct {
@@ -70,6 +71,7 @@ type ffprobeStream struct {
 	CodecName string `json:"codec_name"`
 	Width     int    `json:"width"`
 	Height    int    `json:"height"`
+	Channels  int    `json:"channels"`
 }
 
 type ffprobeFormat struct {
@@ -111,6 +113,7 @@ func (m *MetadataExtractor) parseOutput(output []byte) (*Metadata, error) {
 		case "audio":
 			if meta.AudioCodec == "" {
 				meta.AudioCodec = strings.ToUpper(stream.CodecName)
+				meta.AudioChannels = stream.Channels
 			}
 		}
 	}

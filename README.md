@@ -1,28 +1,37 @@
-# RVCinemaView
+# Cinema View Server
 
-Lightweight media server for RISC-V devices (Orange Pi RV2) with Android/Android TV client.
+Lightweight media server for RISC-V devices (Orange Pi RV2) and other platforms.
 
 ## Features
 
-- **Lightweight Server** - Pure Go, no CGO, minimal dependencies
+- **Lightweight** - Pure Go, no CGO, minimal dependencies
 - **RISC-V Support** - Designed for Orange Pi RV2 and similar devices
-- **Android Client** - Works on phones, tablets, and Android TV
 - **Direct Play** - HTTP Range streaming, no transcoding
 - **Thumbnails** - Auto-generated video previews (requires ffmpeg)
 - **Progress Tracking** - Resume playback from where you left off
-- **D-Pad Navigation** - Full remote control support for TV
+- **Library Tree** - Single API call returns entire folder structure
 
 ## Quick Start
 
-### Server Installation (RISC-V Linux)
+### 1. Download or Build
 
-1. **Download the binary:**
+**Download binary:**
 ```bash
-wget https://github.com/user/rvcinemaview/releases/latest/download/rvcinemaview-riscv64
-chmod +x rvcinemaview-riscv64
+wget https://github.com/user/cinemaview-server/releases/latest/download/cinemaview-riscv64
+chmod +x cinemaview-riscv64
 ```
 
-2. **Create configuration:**
+**Or build from source:**
+```bash
+# For local testing
+go build -o cinemaview ./cmd/rvcinemaview
+
+# For RISC-V deployment
+GOOS=linux GOARCH=riscv64 go build -o cinemaview-riscv64 ./cmd/rvcinemaview
+```
+
+### 2. Configure
+
 ```bash
 cat > config.yaml << EOF
 server:
@@ -41,71 +50,39 @@ thumbnails:
 EOF
 ```
 
-3. **Run:**
+### 3. Run
+
 ```bash
-./rvcinemaview-riscv64 -config config.yaml
+./cinemaview -config config.yaml
 ```
 
-### Systemd Service Installation
+## Systemd Service
 
 ```bash
-cd server/deploy/
+cd deploy/
 sudo ./install.sh
 sudo nano /opt/rvcinemaview/config.yaml  # Configure your media path
 sudo systemctl enable rvcinemaview
 sudo systemctl start rvcinemaview
 ```
 
-### Android Client
+## Docker / Podman
 
-1. Install APK on your Android device or TV
-2. Enter server address (e.g., `192.168.1.100:6540`)
-3. Browse and watch your media
+```bash
+podman build -t cinemaview-server .
+podman run -d \
+  -p 6540:6540 \
+  -v /path/to/media:/media:ro \
+  -v ./data:/app/data \
+  cinemaview-server
+```
 
 ## Requirements
 
-### Server
-- RISC-V 64-bit Linux (tested on Orange Pi RV2)
-- Optional: ffmpeg/ffprobe for thumbnails and metadata
+- RISC-V 64-bit Linux (or any Go-supported platform)
+- Optional: ffmpeg/ffprobe for thumbnails and metadata extraction
 
-### Client
-- Android 7.0+ (API 24)
-- Android TV with Leanback support
-
-## Building from Source
-
-### Server
-```bash
-cd server
-
-# For local testing
-go build -o rvcinemaview ./cmd/rvcinemaview
-
-# For RISC-V deployment
-GOOS=linux GOARCH=riscv64 go build -o rvcinemaview-riscv64 ./cmd/rvcinemaview
-```
-
-### Android Client
-```bash
-cd android
-./gradlew assembleRelease
-```
-
-## API Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/v1/health` | Health check |
-| GET | `/api/v1/library/tree` | Get library folder tree |
-| POST | `/api/v1/library/scan` | Trigger library scan |
-| GET | `/api/v1/media/{id}` | Get media details |
-| GET | `/api/v1/media/{id}/stream` | Stream media file |
-| GET | `/api/v1/media/{id}/thumbnail` | Get thumbnail |
-| POST | `/api/v1/playback/{id}/position` | Save playback position |
-| GET | `/api/v1/playback/{id}/position` | Get playback position |
-| GET | `/api/v1/playback/continue` | Get continue watching list |
-
-## Configuration
+## Configuration Reference
 
 ```yaml
 server:
@@ -130,6 +107,27 @@ logging:
   level: "info"            # Log level: debug, info, warn, error
   pretty: true             # Human-readable logs
 ```
+
+## API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/v1/health` | Health check |
+| GET | `/api/v1/library/tree` | Get full library structure |
+| POST | `/api/v1/library/scan` | Trigger library rescan |
+| GET | `/api/v1/media/{id}` | Get media details and stream URL |
+| GET | `/api/v1/media/{id}/stream` | Stream media file (HTTP Range) |
+| GET | `/api/v1/media/{id}/thumbnail` | Get video thumbnail |
+| POST | `/api/v1/playback/{id}/position` | Save playback position |
+| GET | `/api/v1/playback/{id}/position` | Get playback position |
+| GET | `/api/v1/playback/continue` | Get continue watching list |
+
+## Supported Video Formats
+
+Any format supported by the client player:
+- Containers: MP4, MKV, AVI, MOV, WebM
+- Video: H.264, H.265/HEVC, VP8, VP9, AV1
+- Audio: AAC, AC3, EAC3, DTS, MP3, FLAC, Opus
 
 ## License
 

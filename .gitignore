@@ -1,26 +1,32 @@
-.claude/
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+rvcinemaview
 
-# Data directories
-server/data/
-data/
+# Test binary
+*.test
 
-# Environment files
-.env
-*.local
+# Output of go coverage
+*.out
+
+# Dependency directories
+vendor/
 
 # IDE
 .idea/
 .vscode/
 *.swp
 *.swo
-*.iml
 
-# OS
-.DS_Store
-Thumbs.db
+# Data
+data/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
 
-# Logs
-*.log
-
-# Go
-go.work
+# Config with secrets
+config.local.yaml

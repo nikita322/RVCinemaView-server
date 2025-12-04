@@ -1,21 +1,7 @@
 .claude/
 
 # Binaries
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
-rvcinemaview
-
-# Test binary
-*.test
-
-# Output of go coverage
-*.out
-
-# Dependency directories
-vendor/
+rvcinemaview_*
 
 # IDE
 .idea/
@@ -31,4 +17,4 @@ data/
 *.db-shm
 
 # Config with secrets
-config.local.yaml
+config.yaml

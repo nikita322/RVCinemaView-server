@@ -8,7 +8,7 @@ server:
   write_timeout: 0s  # 0 = no timeout (important for streaming)
 
 library:
-  path: "/media/movies"  # Path to your media library
+  path: "./media"  # Path to your media library
   name: "Media Library"  # Display name for the library
 
 database:
